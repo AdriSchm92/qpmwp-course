@@ -51,6 +51,12 @@ class BacktestData():
             X = X[X.index <= end_date][ids].tail(width+1).pct_change(fill_method=None).iloc[1:]
             if fillna_value is not None:
                 X.fillna(fillna_value, inplace=True)
+            try: # Try to sort columns numerically (e.g., IDs as integers)
+                X.columns = X.columns.astype(int) # Convert to integers for correct sorting
+                X = X.sort_index(axis=1) # Sort columns numerically
+                X.columns = X.columns.astype(str) # Optional: convert back to string
+            except:
+                pass # If conversion fails, keep original order
             return X
 
     def get_volume_series(
