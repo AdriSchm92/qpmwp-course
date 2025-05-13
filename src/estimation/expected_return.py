@@ -88,6 +88,9 @@ class ExpectedReturn: # This class is used to estimate the expected return of a 
 
         scalefactor = self.spec.get('scalefactor', 1) # Get the value for 'scalefactor' from the "spec" dictionary. If it’s not found, return one as the default value.
         estimation_method = self.spec['method']
+        span=self.spec.get('span', 10)
+        reverse=self.spec.get('reverse', True)
+        attribute = self.spec.get('attribute', None)
 
         if estimation_method == 'geometric':
             mu = mean_geometric(X=X, scalefactor=scalefactor)
@@ -96,7 +99,7 @@ class ExpectedReturn: # This class is used to estimate the expected return of a 
         elif estimation_method == 'harmonic':
             mu = mean_harmonic(X=X, scalefactor=scalefactor)
         elif estimation_method == 'ewm':
-            mu = mean_ewm(X=X, scalefactor=scalefactor, span=self.spec.get('span', 10), reverse=self.spec.get('reverse', True))
+            mu = mean_ewm(X=X, scalefactor=scalefactor, span=span, reverse=reverse, attribute=attribute)
         else:
             raise ValueError(
                 'Estimation method not recognized.'
