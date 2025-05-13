@@ -187,19 +187,39 @@ def mean_ewm(X: Union[pd.DataFrame, np.ndarray, object],
     Def. scalefactor: The argument scalefactor can be either a float or an int. It has a default value of one.
     Def. span: The span parameter is a smoothing factor that determines the degree of weighting decrease. A smaller span results in more weight being given to recent observations, while a larger span gives more weight to older observations. It has a default value of ten.
     Def. reverse: If True, the function calculates the ewm starting from the bottom of the series (each column). If False, it starts from the top. This is useful for time series data where it depends where the calculation starts. It has a default value of true.
-    Def. attribute: If X is an object (e.g., a custom class like "BacktestData") that contains one or more attributes, and one of those attributes is a DataFrame, then attribute tells the code which specific attribute (i.e., which DataFrame) to extract from X.
+    Def. attribute: If X is an object (e.g., a custom class like "BacktestData") that contains one or more attributes (e.g., like "market_data" or "jkp_data"), and one of those attributes is a DataFrame, then attribute tells the code which specific attribute (i.e., which DataFrame) to extract from X.
     
+    Remark: Within the class "BacktestData" there only defined the attributes that are mentioned above.
 
+    X = X.get_return_series():
+    # We always use the function "return_series" after calling the attribute. If we would like to use the function "get_volume_series" or "get_characteristic_series" the function has to be extended.
+    
+    value = series[t]
+    # Assigns values top-down (reverse=False) or bottom-up (reverse=True).
+    
+    if pd.isna(value):
+    # "pd.isna(value)"" checks if the current value is missing (i.e., NaN, None, or pd.NA).
+    
+    continue 
+    # If yes, "continue" tells Python to skip the rest of the loop body and go to the next iteration.
+    
+    weight = alpha * (1 - alpha) ** t
+    # Calc. of the denominator, where alpha = 2 / (span + 1).
+    
+    numerators.append(weight * value)
+    # Calc. of the numerator.
+    
+    denom_sum = np.sum(denominators_dict[col])
+        if denom_sum == 0:
+            mu = np.nan      
+        else:
+            mu = (np.sum(numerators_dict[col]) / denom_sum) * scalefactor
+    # If the denominator is approx. zero it adds a NaN to the list of the variable "mu"
 
-    Adjusted it!!!!!!!!!!
-    i = t, where t is the time index of the series.
-    sum(weight * value) / sum(weight) = mean_ewm(X)
-    weight = alpha * (1 - alpha) ** i, where alpha = 2 / (span + 1).
-    value = X[i], where i is the time index of the series.
+    Remark: The case "denom_sum == 0" could only happen if there are enough of NaN-values at the top (reverse=False) or at the bottom (reverse=True) of the specific column because then the weights (the sum of the weights = denominator) gets really small (approx. zero).
+    It also depends how span is chosen. The larger the span the smaller is alpha and therefore the less is the input of a large exponent t. The more NaN's have to be skipped at the beginning the larger gets the exponent t.
+
     → It is done column by column (axis=0).
-
-    Remark over the handling of the NaN!!!!!!!!!!!!!
-    Test the function in assignment 4!!!!!!!!!!!!!
     
     Data output: The function returns a pandas series or a numpy array, depending on the input type of X.    
     """
