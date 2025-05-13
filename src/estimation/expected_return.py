@@ -4,7 +4,7 @@
 
 # --------------------------------------------------------------------------
 # Cyril Bachelard/Adrian Schmidli
-# This version:     24.04.2025
+# This version:     13.05.2025
 # First version:    18.01.2025
 # --------------------------------------------------------------------------
 
@@ -187,7 +187,9 @@ def mean_ewm(X: Union[pd.DataFrame, np.ndarray, object],
     Def. scalefactor: The argument scalefactor can be either a float or an int. It has a default value of one.
     Def. span: The span parameter is a smoothing factor that determines the degree of weighting decrease. A smaller span results in more weight being given to recent observations, while a larger span gives more weight to older observations. It has a default value of ten.
     Def. reverse: If True, the function calculates the ewm starting from the bottom of the series (each column). If False, it starts from the top. This is useful for time series data where it depends where the calculation starts. It has a default value of true.
-    Def. attribute: Add explanation!!!!!!!!!!!
+    Def. attribute: If X is an object (e.g., a custom class like "BacktestData") that contains one or more attributes, and one of those attributes is a DataFrame, then attribute tells the code which specific attribute (i.e., which DataFrame) to extract from X.
+    
+
 
     Adjusted it!!!!!!!!!!
     i = t, where t is the time index of the series.
