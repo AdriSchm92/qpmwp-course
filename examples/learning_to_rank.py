@@ -57,7 +57,7 @@ from backtesting.backtest_data import BacktestData
 # - swiss performance index, SPI (from csv file)
 # --------------------------------------------------------------------------
 
-path_to_data = 'C:/Users/User/OneDrive/Documents/QPMwP/Data/'  # <change this to your path to data>
+path_to_data = "C:/Users/admin/OneDrive/Dokumente/Studium UZH/Master/5. Semester/Quantitative Portfolio Management with Python/Assingments/5. Assingment/1. Daten erhalten/" # <change this if necessary>
 
 # Load market and jkp data from parquet files
 market_data = pd.read_parquet(path = f'{path_to_data}market_data.parquet')
@@ -300,11 +300,13 @@ ranker = XGBRanker(
     # min_child_weight=0.1,   # Minimum sum of instance weight in a child
     # max_depth=6,            # Maximum tree depth
     # n_estimators=50,        # Number of boosting rounds
-    eval_metric='ndcg@10'    # Evaluate NDCG at top 10
+    eval_metric='ndcg@10',    # Evaluate NDCG at top 10
+    ndcg_exp_gain=False,      # Disable exponential gain for NDCG calculation
 )
 
 # Train the model
-query_ids_train = df_train['date'].values
+query_ids_train = df_train['date'].astype('category').cat.codes.astype(np.uint32)
+#query_ids_train = df_train['date'].values
 ranker.fit(
     X_train,
     y_train,
@@ -314,12 +316,3 @@ ranker.fit(
 # Predict rankings on the test set
 preds = ranker.predict(X_test)
 preds
-
-
-
-
-
-
-
-
-
