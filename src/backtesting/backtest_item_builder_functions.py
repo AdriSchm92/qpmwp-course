@@ -15,6 +15,7 @@
 import numpy as np
 import pandas as pd
 import xgboost as xgb
+import operator as op
 
 
 
@@ -180,12 +181,12 @@ def bibfn_selection_ltr(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
     '''
 
     # Define the selection by the ids available for the current rebalancing date
-    df_test = bs.data.merged_df[bs.data.merged_df['date'] == rebdate]
-    ids = list(df_test['id'].unique())
+    df_test = bs.data.merged_df[bs.data.merged_df['date'] == rebdate] # Extracting all rows from "merged_df" where the "date" column matches the "rebdate".
+    ids = list(df_test['id'].unique()) # Getting a list of unique assets (id's) from the filtered rows in "df_test".
 
     # Return a binary series indicating the selected stocks
     return pd.Series(1, index=ids, name='binary', dtype=int)
-
+    # Generates the test data for the learning-to-rank (LTR) model for each rebalancing date.
 
 
 def bibfn_selection_jkp_factor_scores(bs, rebdate: str, **kwargs) -> pd.DataFrame:
@@ -196,19 +197,23 @@ def bibfn_selection_jkp_factor_scores(bs, rebdate: str, **kwargs) -> pd.DataFram
     '''
 
     # Arguments
-    fields = kwargs.get('fields')
+    fields = kwargs.get('fields') # Has to be specified otherwise an error is raised.
+    width = kwargs.get('width', 365)
 
     # Selection
-    ids = bs.selection.selected
+    ids = bs.selection.selected # This line tries to retrieve the currently selected assets (id's) at the given rebalancing date from the BacktestService (bs) if a prior selection was made.
     if ids is None:
-        ids = bs.data.jkp_data.index.get_level_values('id').unique()
+        ids = bs.data.jkp_data.index.get_level_values('id').unique() # If no selection was made, we use all available assets (id's) in the jkp data.
 
     # Filter rows prior to the rebdate and within one year
-    df = bs.data.jkp_data[fields]
+    df = bs.data.jkp_data[fields] # This extracts the DataFrame with only those factor columns.
+    # fields is a single string like 'z_score' → returns a series.
+    # fields is a list like ['z_score', 'f_score', 'o_score'] → returns a DataFrame.
     filtered_df = df.loc[
         (df.index.get_level_values('date') < rebdate) &
-        (df.index.get_level_values('date') >= pd.to_datetime(rebdate) - pd.Timedelta(days=365))
+        (df.index.get_level_values('date') >= pd.to_datetime(rebdate) - pd.Timedelta(days=width))
     ]
+    # This filters the DataFrame to only include rows where the date is before the rebdate and within the specified period ("width") prior to the rebdate.
 
     # Extract the last available value for each id
     scores = filtered_df.groupby('id').last()
@@ -218,10 +223,76 @@ def bibfn_selection_jkp_factor_scores(bs, rebdate: str, **kwargs) -> pd.DataFram
     filter_values['binary'] = scores.notna().all(axis=1).astype(int)
 
     return filter_values
+    # Generates a binary column indicating whether a specified field (factor) is available for each asset (id) within the specified time window or not.
+    # These available fields (factors) are used in multivariate regression (factor models) to estimate the expected returns of the assets (id's).
 
 
+def bibfn_selection_jkp_single_factor_threshold(bs, rebdate: str, **kwargs) -> pd.DataFrame:
 
+    '''
+    Backtest item builder function for defining the selection.
+    Filters stocks based on a single selected factor (e.g., z-score) and a specified threshold.
+    Only assets meeting the threshold condition are selected.
+    '''
 
+    # Arguments
+    fields = kwargs.get('fields')
+    width = kwargs.get('width', 365)
+    threshold = kwargs.get('threshold', None)
+    operator_str = kwargs.get('operator', '>')
+
+    # Validate 'fields'
+    if fields is None:
+        raise ValueError("You must specify a 'fields' argument with exactly one factor name (e.g., 'z_score').")
+    
+    if threshold is None:
+        raise ValueError("A numeric 'threshold' value must be provided.")
+
+    # Ensure fields is a list with exactly one element
+    if isinstance(fields, str): 
+        fields = [fields]
+    elif isinstance(fields, list):
+        if len(fields) != 1:
+            raise ValueError(f"Exactly one factor is expected, but received: {fields}")
+    else:
+        raise TypeError("'fields' must be a string or a list of one string.")
+    
+    field = fields[0]  # Extract the single field name from the list
+    
+    # Validate operator
+    ops = {
+        '>': op.gt,
+        '>=': op.ge,
+        '<': op.lt,
+        '<=': op.le,
+        '==': op.eq,
+        '!=': op.ne
+    }
+    if operator_str not in ops:
+        raise ValueError(f"Unsupported operator '{operator_str}'. Allowed: {list(ops.keys())}")
+    op_func = ops[operator_str]
+    
+    # Filter rows prior to the rebdate and within one year
+    df = bs.data.jkp_data[fields] # This extracts the DataFrame with only this factor column.
+    filtered_df = df.loc[
+        (df.index.get_level_values('date') <= rebdate) &
+        (df.index.get_level_values('date') >= pd.to_datetime(rebdate) - pd.Timedelta(days=width))
+    ]
+    # In effect, this keeps data that falls within a look-back window of "width" days, ending on the rebdate.
+
+    # Extract the last available value for each id
+    factor_series = filtered_df.groupby('id')[field].last()
+
+    # Apply threshold filtering
+    binary = op_func(factor_series, threshold).astype(int)
+    
+    # Return DataFrame with factor values and binary indicator
+    filter_values = pd.DataFrame({
+        'value': factor_series,
+        'binary': binary
+    })
+
+    return filter_values
 
 # --------------------------------------------------------------------------
 # Backtest item builder functions (bibfn) - Optimization data
@@ -340,7 +411,8 @@ def bibfn_scores(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
     # Drop the 'binary' column
     bs.optimization_data['scores'] = scores.drop(columns=['binary'])
     return None
-
+    # This function is used to copy the chosen scores (factors) from the selection object to the optimization data object, which is then used for optimization in the backtesting process.
+    # Just the chosen scores, that are selected by the selection object (binary = 1), are copied to the optimization data object.
 
 def bibfn_scores_ltr(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
 
