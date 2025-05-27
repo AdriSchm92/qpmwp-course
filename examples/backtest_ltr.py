@@ -76,7 +76,7 @@ from backtesting.backtest import Backtest
 # - swiss performance index, SPI (from csv file)
 # --------------------------------------------------------------------------
 
-path_to_data = 'C:/Users/User/OneDrive/Documents/QPMwP/Data/'  # <change this to your path to data>
+path_to_data = "C:/Users/admin/OneDrive/Dokumente/Studium UZH/Master/5. Semester/Quantitative Portfolio Management with Python/Assingments/5. Assingment/1. Daten erhalten/" # <change this if necessary>
 
 # Load market and jkp data from parquet files
 market_data = pd.read_parquet(path = f'{path_to_data}market_data.parquet')
