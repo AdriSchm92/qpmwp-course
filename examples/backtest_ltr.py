@@ -519,32 +519,32 @@ bt_sv_tocon.run(bs=bs)
 
 
 # Laod backtests from pickle
-path = 'C:/Users/User/OneDrive/Documents/QPMwP/Backtests/' #<change this to your local path>
+# path = 'C:/Users/User/OneDrive/Documents/QPMwP/Backtests/' #<change this to your local path>
 
-bt_sv = load_pickle(
-    filename = 'backtest_sv.pickle',
-    path = path,
-)
-bt_sv_poc = load_pickle(
-    filename = 'backtest_sv_poc.pickle',
-    path = path,
-)
-bt_sv_retrain_monthly = load_pickle(
-    filename = 'backtest_sv_retrain_monthly.pickle',
-    path = path,
-)
-bt_sv_sdub = load_pickle(
-    filename = 'backtest_sv_sdub.pickle',
-    path = path,
-)
-bt_sv_sdub_tocon = load_pickle(
-    filename = 'backtest_sv_sdub_tocon.pickle',
-    path = path,
-)
-bt_sv_tocon = load_pickle(
-    filename = 'backtest_sv_tocon.pickle',
-    path = path,
-)
+# bt_sv = load_pickle(
+#    filename = 'backtest_sv.pickle',
+#    path = path,
+# )
+# bt_sv_poc = load_pickle(
+#    filename = 'backtest_sv_poc.pickle',
+#    path = path,
+# )
+# bt_sv_retrain_monthly = load_pickle(
+#    filename = 'backtest_sv_retrain_monthly.pickle',
+#    path = path,
+# )
+# bt_sv_sdub = load_pickle(
+#    filename = 'backtest_sv_sdub.pickle',
+#    path = path,
+# )
+# bt_sv_sdub_tocon = load_pickle(
+#    filename = 'backtest_sv_sdub_tocon.pickle',
+#    path = path,
+# )
+# bt_sv_tocon = load_pickle(
+#    filename = 'backtest_sv_tocon.pickle',
+#    path = path,
+# )
 
 
 
@@ -555,10 +555,10 @@ return_series = bs.data.get_return_series()
 strategy_dict = {
     # 'sv_poc': bt_sv_poc.strategy,
     'sv': bt_sv.strategy,
-    'sv_retrain_monthly': bt_sv_retrain_monthly.strategy,
-    # 'sv_sdub': bt_sv_sdub.strategy,
-    # 'sv_sdub_tocon': bt_sv_sdub_tocon.strategy,
-    # 'sv_tocon': bt_sv_tocon.strategy,
+    # 'sv_retrain_monthly': bt_sv_retrain_monthly.strategy,
+    'sv_sdub': bt_sv_sdub.strategy,
+    'sv_sdub_tocon': bt_sv_sdub_tocon.strategy,
+    'sv_tocon': bt_sv_tocon.strategy,
 }
 
 sim_dict_gross = {
