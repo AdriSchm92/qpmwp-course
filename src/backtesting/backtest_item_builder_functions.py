@@ -431,6 +431,7 @@ def bibfn_scores_ltr(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
     df_test = bs.data.merged_df[bs.data.merged_df['date'] == rebdate]
     df_test = df_test.loc[df_test['id'].drop_duplicates(keep='first').index]
     df_test = df_test.loc[df_test['id'].isin(bs.selection.selected)]
+    group_sizes = merged_df.groupby('date')['ret'].transform('count') # or 'size'.
 
     # Training data
     X_train = (
@@ -461,19 +462,18 @@ def bibfn_scores_ltr(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
     # Predict using the test data
     pred = model.predict(dtest)
     preds =  pd.Series(pred, df_test['id'], dtype='float64')
-    ranks = preds.rank(method='first', ascending=True).astype(int)
+    ranks = preds.rank(method='dense', ascending=False)
 
     # Output
     scores = pd.concat({
         'scores': preds,
-        'ranks': (100 * ranks / len(ranks)).astype(int),  # Normalize the ranks to be between 0 and 100
+        'scores_normalized': (preds - preds.mean()) / preds.std(), # Normalize the scores to have mean 0 and std 1.
+        'ranks': (group_sizes * ranks / len(ranks)).astype(int), # Normalize the labels to be between 0 and the specific group size and convert it to integer type.
         'true': y_test,
         'ret': pd.Series(df_test['ret'].values, index=df_test['id']),
     }, axis=1)
     bs.optimization_data['scores'] = scores
     return None
-
-
 
 
 
