@@ -522,8 +522,8 @@ def bibfn_size_dependent_upper_bounds(bs: 'BacktestService', rebdate: str, **kwa
 
     # Arguments
     small_cap = kwargs.get('small_cap', {'threshold': 300_000_000, 'upper': 0.02})
-    mid_cap = kwargs.get('small_cap', {'threshold': 1_000_000_000, 'upper': 0.05})
-    large_cap = kwargs.get('small_cap', {'threshold': 10_000_000_000, 'upper': 0.1})
+    mid_cap = kwargs.get('mid_cap', {'threshold': 1_000_000_000, 'upper': 0.05})
+    large_cap = kwargs.get('large_cap', {'threshold': 10_000_000_000, 'upper': 0.1})
 
     # Selection
     ids = bs.optimization.constraints.ids
@@ -531,14 +531,11 @@ def bibfn_size_dependent_upper_bounds(bs: 'BacktestService', rebdate: str, **kwa
     # Data: market capitalization
     mcap = bs.data.market_data['mktcap']
     # Get last available valus for current rebdate
-    mcap = mcap[mcap.index.get_level_values('date') <= rebdate].groupby(
-        level = 'id'
-    ).last()
+    mcap = mcap[mcap.index.get_level_values('date') <= rebdate].groupby(level = 'id').last()
 
     # Remove duplicates
     mcap = mcap[~mcap.index.duplicated(keep=False)]
-    # Ensure that mcap contains all selected ids,
-    # possibly extend mcap with zero values
+    # Ensure that mcap contains all selected id's, possibly extend mcap with zero values
     mcap = mcap.reindex(ids).fillna(0)
 
     # Generate the upper bounds
@@ -561,6 +558,75 @@ def bibfn_size_dependent_upper_bounds(bs: 'BacktestService', rebdate: str, **kwa
         )
 
     return None
+
+
+def bibfn_sector_dependent_bounds(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
+
+    '''
+    Backtest item builder function for setting the upper bounds
+    in dependence of the portfolio's sector exposure.
+
+    Sector codes are based on GICS classification.
+    '''
+    
+    # Arguments
+    sector_bounds = kwargs.get('sector_bounds', {
+        '10': (0.0, 0.1), # Energy
+        '15': (0.0, 0.1), # Materials
+        '20': (0.0, 0.1), # Industrials
+        '25': (0.0, 0.1), # Consumer Discretionary
+        '30': (0.0, 0.1), # Consumer Staples
+        '35': (0.0, 0.1), # Health Care
+        '40': (0.0, 0.1), # Financials
+        '45': (0.0, 0.1), # Information Technology
+        '50': (0.0, 0.1), # Communication Services
+        '55': (0.0, 0.1), # Utilities
+        '60': (0.0, 0.1), # Real Estate
+        None: (0.0, 0.1), # Other (e.g., missing data)
+    })
+    # Default sector bounds (can be overridden via kwargs)
+
+    # Selection
+    ids = bs.optimization.constraints.ids
+
+    # Data: sector information (GIGS classification code)
+    sector = bs.data.market_data['sector']
+    # Get last available valus for current rebdate
+    sector = sector[sector.index.get_level_values('date') <= rebdate].groupby(level = 'id').last()
+    
+    # Remove duplicates
+    sector = sector[~sector.index.duplicated(keep=False)]
+    # Ensure that sector contains all selected id's
+    sector = sector.reindex(ids)
+    # Fill NaN values with None to avoid issues with missing sectors
+    sector = sector.where(pd.notnull(sector), None)
+
+    # Build one constraint per sector using inequality constraints
+    for code, (lb, ub) in sector_bounds.items():
+        mask = (sector == code) # Create a boolean mask for the current sector code.
+        if not mask.any():
+            continue  # Skip if sector code is not present in current id's.
+        g_vector = pd.Series(0.0, index=ids) 
+        g_vector[mask] = 1.0
+
+        # Upper bound: sum of weights in sector <= ub
+        bs.optimization.constraints.add_linear(
+            g_values = g_vector,
+            sense = '<=',
+            rhs = ub,
+            name = f"sector_{code}_ub"
+        )
+
+        # Lower bound: sum of weights in sector >= lb
+        bs.optimization.constraints.add_linear(
+            g_values = g_vector,
+            sense = '>=',
+            rhs = lb,
+            name = f"sector_{code}_lb"
+        )
+
+    return None
+
 
 
 def bibfn_turnover_constraint(bs, rebdate: str, **kwargs) -> None:
