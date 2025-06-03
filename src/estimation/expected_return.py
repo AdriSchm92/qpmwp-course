@@ -80,6 +80,8 @@ class ExpectedReturn: # This class is used to estimate the expected return of a 
             )
         return None # Not necessary, but it is a good practice to return None explicitly. If nothing is returned (no error), Python will return "None" by default.
 
+    # ----------> NEW!!
+    # Added the new estimation approaches.
     def estimate(
         self,
         X: Union[pd.DataFrame, np.ndarray],
@@ -156,6 +158,7 @@ def mean_arithmetic(X: Union[pd.DataFrame, np.ndarray],
     mu = X.mean(axis=0) * scalefactor
     return mu
 
+# ----------> NEW!!
 def mean_harmonic(X: Union[pd.DataFrame, np.ndarray],
                     scalefactor: Union[float, int] = 1) -> Union[pd.Series, np.ndarray]:
     """
@@ -175,6 +178,7 @@ def mean_harmonic(X: Union[pd.DataFrame, np.ndarray],
     mu = ((n / np.sum(1 / (1 + X), axis=0)) * scalefactor) - 1
     return mu
 
+# ----------> NEW!!
 def mean_ewm(X: Union[pd.DataFrame, np.ndarray, object],
                     scalefactor: Union[float, int] = 1,
                     span: Union[float, int] = 10, # span = 10 it is a popular choice in practice.

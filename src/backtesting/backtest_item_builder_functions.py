@@ -227,6 +227,7 @@ def bibfn_selection_jkp_factor_scores(bs, rebdate: str, **kwargs) -> pd.DataFram
     # These available fields (factors) are used in multivariate regression (factor models) to estimate the expected returns of the assets (id's).
 
 
+# ----------> NEW!!
 def bibfn_selection_jkp_single_factor_threshold(bs, rebdate: str, **kwargs) -> pd.DataFrame:
 
     '''
@@ -414,6 +415,9 @@ def bibfn_scores(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
     # This function is used to copy the chosen scores (factors) from the selection object to the optimization data object, which is then used for optimization in the backtesting process.
     # Just the chosen scores, that are selected by the selection object (binary = 1), are copied to the optimization data object.
 
+
+# ----------> NEW!!
+# Added the variable "scores_normalized" to the output DataFrame and changed the method how the ranks are calculated and normalized.
 def bibfn_scores_ltr(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
 
     '''
@@ -513,6 +517,8 @@ def bibfn_box_constraints(bs: 'BacktestService', rebdate: str, **kwargs) -> None
     return None
 
 
+# ----------> NEW!!
+# Small error correction: changed key of dictionary mid_cap/large_cap to mid_cap/large_cap instead of small_cap.
 def bibfn_size_dependent_upper_bounds(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
 
     '''
@@ -560,6 +566,7 @@ def bibfn_size_dependent_upper_bounds(bs: 'BacktestService', rebdate: str, **kwa
     return None
 
 
+# ----------> NEW!!
 def bibfn_sector_dependent_bounds(bs: 'BacktestService', rebdate: str, **kwargs) -> None:
 
     '''

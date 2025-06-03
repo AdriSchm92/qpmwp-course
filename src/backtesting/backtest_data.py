@@ -46,6 +46,8 @@ class BacktestData():
         if width is None:
             width = X.shape[0] - 1
 
+        # ----------> NEW!!
+        # Added the sorting part to ensure columns are sorted by ID.
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             X = X[X.index <= end_date][ids].tail(width+1).pct_change(fill_method=None).iloc[1:]
