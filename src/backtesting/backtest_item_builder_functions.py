@@ -591,7 +591,7 @@ def bibfn_sector_dependent_bounds(bs: 'BacktestService', rebdate: str, **kwargs)
         '60': (0.0, 0.1), # Real Estate
         None: (0.0, 0.1), # Other (e.g., missing data)
     })
-    # Default sector bounds (can be overridden via kwargs)
+    # Default sector bounds (can be overwritten via kwargs)
 
     # Selection
     ids = bs.optimization.constraints.ids
